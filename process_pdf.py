@@ -1,41 +1,31 @@
+#This function embeds the PDF document into a vector Database using API model
+#Creates a local vector DB with ChromaDB 
+#Returns vector DB
 from pathlib import Path
-from pypdf import PdfReader
+from langchain_community.document_loaders import PyPDFLoader
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 
-def process_pdf(pdf_path_str, disease_db):
-    # Path setup - Ensure this is a string for Chroma
-    current_dir = Path.cwd()
-    DB_DIR = current_dir / disease_db
-    pdf_path = Path(pdf_path_str)
-    
-    if not pdf_path.exists():
-        raise FileNotFoundError(f"Cannot find the file at: {pdf_path}")
-
-    # 2. Extract Text
-    reader = PdfReader(str(pdf_path))
-    full_text = ""
-    for page in reader.pages:
-        content = page.extract_text()
-        if content:
-            full_text += content
-
-    if not full_text.strip():
-        raise ValueError("The PDF appears to be empty or contains only images (OCR required).")
-
+def process_pdf(disease,doc_path, vector_dir, chunk_size, chunk_overlap, embed_model):
+    # 1. Check if document exists
+    if not doc_path.exists():
+        raise FileNotFoundError(f"Cannot find the file at: {doc_path}")
+    # 2. Read Document
+    reader = PyPDFLoader(str(doc_path))
+    docs = reader.load()
     # 3. Split text
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
-    chunks = text_splitter.split_text(full_text)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    chunks = text_splitter.split_documents(docs)
     
     # 4. Vectorization
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    embeddings = OpenAIEmbeddings(model=embed_model)
     
-    # FIX: Convert DB_DIR to a string using str()
-    # Also use .as_posix() inside str() to ensure forward slashes
-    vectorstore = Chroma.from_texts(
-        texts=chunks, 
+    # 5.Store Embeddings 
+    vectorstore = Chroma.from_documents(
+        documents=chunks, 
         embedding=embeddings,
-        persist_directory=str(DB_DIR.as_posix()) 
+        collection_name=disease,
+        persist_directory=vector_dir.as_posix() 
     )
     return vectorstore
