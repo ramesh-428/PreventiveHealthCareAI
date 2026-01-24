@@ -1,12 +1,12 @@
 #This function provides the response in text for user query 
 from langchain_classic.retrievers import MergerRetriever
 from langchain_openai import OpenAIEmbeddings
+from langchain_openai import  ChatOpenAI
 from langchain_chroma import Chroma
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_classic.chains import create_retrieval_chain
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import  ChatOpenAI
-def get_rag_chain(knn, embed_model, gpt_model, vector_dir):
+def get_open_rag_chain(knn, embed_model, gpt_model, vector_dir, creativity):
     diseases=["Anaemia","Asthma","Covid-19","Dengue","Diabetes","HyperTension","Malaria","Tuberculosis","Typhoid"]
     vectorstore=[]
     for disease in diseases:
@@ -21,11 +21,11 @@ def get_rag_chain(knn, embed_model, gpt_model, vector_dir):
     for vector in vectorstore:
         retriever_l.append(vector.as_retriever(search_kwargs={"k": knn}))
     lotr = MergerRetriever(retrievers=retriever_l)
+    llm = ChatOpenAI(model=gpt_model,
+                    temperature=creativity)
     system_prompt = (
-        "You are a strict assistant. Answer the user's question using ONLY "
-        "the provided context below. Do not use your own internal knowledge. "
-        "If the answer is not contained within the context, exactly say: "
-        "'I am Sorry. I can't find the answer for this. However,  I can provide answer for below diseases.\n Anaemia,Asthma,Covid-19,Dengue,Diabetes,HyperTension,Malaria,Tuberculosis and Typhoid' "
+        "You are an assistant. First answer the question using provided context. "
+        "If no context found. Use your own internal knowledge."
         "\n\n"
         "Context: {context}"
     )
@@ -33,8 +33,6 @@ def get_rag_chain(knn, embed_model, gpt_model, vector_dir):
         ("system", system_prompt),
         ("human", "{input}"),
     ])
-
-    llm = ChatOpenAI(model=gpt_model)
     # This creates the logic to process documents
     combine_docs_chain = create_stuff_documents_chain(llm, prompt)
     # This connects the retriever (Chroma) to the logic
