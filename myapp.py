@@ -111,37 +111,67 @@ with st.sidebar:
 # CONFIG
 # ==========================================================
 
+# ==========================================================
+# CONFIG
+# ==========================================================
 current_dir = Path.cwd()
-vector_dir = current_dir / os.getenv("VECTOR_DIR")
-knn = int(os.getenv("KNN"))
-gpt_model_creativity = int(os.getenv("OPENAI_GPT_MODEL_CREATIVITY"))
+vector_dir = current_dir / os.getenv("VECTOR_DIR", "chroma_db")  # Add default
+knn = int(os.getenv("KNN", "3"))  # Add default
+gpt_model_creativity = int(os.getenv("OPENAI_GPT_MODEL_CREATIVITY", "0"))  # Add default
 
-@st.cache_resource(show_spinner="🔄 Initializing medical knowledge base...")
+@st.cache_resource(show_spinner="Initializing medical knowledge base...")
 def init_vector_db():
-    if not vector_dir.exists():
-        process_pdf("data")   # ← yahi tumhara PDF folder
+    """Initialize vector database - creates it if it doesn't exist"""
+    # Check if vector directory exists AND has content
+    if not vector_dir.exists() or not any(vector_dir.iterdir()):
+        st.info("First-time setup: Processing medical documents...")
+        try:
+            # Create the directory if it doesn't exist
+            vector_dir.mkdir(parents=True, exist_ok=True)
+            # Process PDFs and create vector database
+            process_pdf("data")
+            st.success("Medical knowledge base initialized successfully!")
+        except Exception as e:
+            st.error(f"Error initializing database: {str(e)}")
+            raise
+    return True
 
-init_vector_db()
+# Initialize the vector database before anything else
+try:
+    init_vector_db()
+except Exception as e:
+    st.error("Failed to initialize the medical knowledge base. Please check your PDF files and try again.")
+    st.stop()
 
 @st.cache_resource(show_spinner=False)
 def load_strict_rag():
-    return get_strict_rag_chain(
-        knn,
-        st.secrets["OPENAI_EMBEDDING_MODEL"],
-        st.secrets["OPENAI_GPT_MODEL"],
-        vector_dir,
-        gpt_model_creativity
-    )
+    """Load strict RAG chain - only answers from documents"""
+    try:
+        return get_strict_rag_chain(
+            knn,
+            st.secrets["OPENAI_EMBEDDING_MODEL"],
+            st.secrets["OPENAI_GPT_MODEL"],
+            vector_dir,
+            gpt_model_creativity
+        )
+    except Exception as e:
+        st.error(f"Error loading Strict RAG: {str(e)}")
+        return None
 
 @st.cache_resource(show_spinner=False)
 def load_open_rag():
-    return get_open_rag_chain(
-        knn,
-        st.secrets["OPENAI_EMBEDDING_MODEL"],
-        st.secrets["OPENAI_GPT_MODEL"],
-        vector_dir,
-        gpt_model_creativity
-    )
+    """Load open RAG chain - uses broader knowledge"""
+    try:
+        return get_open_rag_chain(
+            knn,
+            st.secrets["OPENAI_EMBEDDING_MODEL"],
+            st.secrets["OPENAI_GPT_MODEL"],
+            vector_dir,
+            gpt_model_creativity
+        )
+    except Exception as e:
+        st.error(f"Error loading Open RAG: {str(e)}")
+        return None
 
 # ==========================================================
 # MAIN CHAT AREA
