@@ -7,8 +7,10 @@ import streamlit as st
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from process_pdf import process_pdf
 from get_strict_rag_chain import get_strict_rag_chain
 from get_open_rag_chain import get_open_rag_chain
+
 
 # -------------------- ENV --------------------
 load_dotenv()
@@ -108,6 +110,14 @@ with st.sidebar:
 # ==========================================================
 # CONFIG
 # ==========================================================
+
+@st.cache_resource(show_spinner="🔄 Initializing medical knowledge base...")
+def init_vector_db():
+    if not vector_dir.exists():
+        process_pdf("data")   # ← yahi tumhara PDF folder
+
+init_vector_db()
+
 current_dir = Path.cwd()
 vector_dir = current_dir / os.getenv("VECTOR_DIR")
 knn = int(os.getenv("KNN"))
