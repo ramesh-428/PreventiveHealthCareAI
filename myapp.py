@@ -111,17 +111,17 @@ with st.sidebar:
 # CONFIG
 # ==========================================================
 
+current_dir = Path.cwd()
+vector_dir = current_dir / os.getenv("VECTOR_DIR")
+knn = int(os.getenv("KNN"))
+gpt_model_creativity = int(os.getenv("OPENAI_GPT_MODEL_CREATIVITY"))
+
 @st.cache_resource(show_spinner="🔄 Initializing medical knowledge base...")
 def init_vector_db():
     if not vector_dir.exists():
         process_pdf("data")   # ← yahi tumhara PDF folder
 
 init_vector_db()
-
-current_dir = Path.cwd()
-vector_dir = current_dir / os.getenv("VECTOR_DIR")
-knn = int(os.getenv("KNN"))
-gpt_model_creativity = int(os.getenv("OPENAI_GPT_MODEL_CREATIVITY"))
 
 @st.cache_resource(show_spinner=False)
 def load_strict_rag():
