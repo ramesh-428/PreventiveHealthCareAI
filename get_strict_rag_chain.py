@@ -6,8 +6,10 @@ from langchain_chroma import Chroma
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_classic.chains import create_retrieval_chain
 from langchain_core.prompts import ChatPromptTemplate
+
+
 def get_strict_rag_chain(knn, embed_model, gpt_model, vector_dir, creativity):
-    diseases=["Anaemia","Asthma","Covid-19","Dengue","Diabetes","HyperTension","Malaria","Tuberculosis","Typhoid"]
+    diseases=["Anaemia","Asthma","Covid-19","Dengue","Diabetes","GBS","HyperTension","Malaria","Nipah","Tuberculosis","Typhoid"]
     vectorstore=[]
     for disease in diseases:
         vector_dir_disease=vector_dir / disease
@@ -24,12 +26,17 @@ def get_strict_rag_chain(knn, embed_model, gpt_model, vector_dir, creativity):
     llm = ChatOpenAI(model=gpt_model,
                     temperature=creativity)
     system_prompt = (
-        "You are a strict assistant. Answer the user's question using ONLY "
-        "the provided context below. Do not use your own internal knowledge. "
-        "If the answer is not contained within the context, exactly say: "
-        "'I am Sorry. I can't find the answer for this. However,  I can provide answer for below diseases.\n Anaemia,Asthma,Covid-19,Dengue,Diabetes,HyperTension,Malaria,Tuberculosis and Typhoid' "
-        "\n\n"
-        "Context: {context}"
+        "You are a strict medical information assistant. "
+    "Use ONLY the provided context to answer the user's question. "
+    "\n\n"
+    "### RULES:\n"
+    "1. If the context contains the answer, provide it clearly and stop. DO NOT add any apologies.\n"
+    "2. ONLY if the context does not contain the answer at all, say exactly: "
+    "'I am Sorry. I can't find the answer for this. However, I can provide answer for the following diseases: "
+    "Anaemia, Asthma, Covid-19, Dengue, Diabetes, GBS, HyperTension, Malaria, Nipah, Tuberculosis, and Typhoid.'\n"
+    "\n"
+    "### CONTEXT:\n"
+    "{context}"
     )
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),

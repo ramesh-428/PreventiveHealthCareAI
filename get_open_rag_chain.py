@@ -6,8 +6,11 @@ from langchain_chroma import Chroma
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_classic.chains import create_retrieval_chain
 from langchain_core.prompts import ChatPromptTemplate
+
+
+
 def get_open_rag_chain(knn, embed_model, gpt_model, vector_dir, creativity):
-    diseases=["Anaemia","Asthma","Covid-19","Dengue","Diabetes","HyperTension","Malaria","Tuberculosis","Typhoid"]
+    diseases=["Anaemia","Asthma","Covid-19","Dengue","Diabetes","GBS","HyperTension","Malaria","Nipah","Tuberculosis","Typhoid"]
     vectorstore=[]
     for disease in diseases:
         vector_dir_disease=vector_dir / disease
