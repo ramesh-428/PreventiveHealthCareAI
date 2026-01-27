@@ -1,93 +1,246 @@
 # ==========================================================
-# Preventive Healthcare AI Chatbot – RAG Demo
-# CDAC-AI Students 2026 Project
+# Preventive Healthcare AI Chatbot
+# CDAC-AI Students 2026 | RAG Medical Assistant
 # ==========================================================
 
 import streamlit as st
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-from process_pdf import process_pdf
 from get_strict_rag_chain import get_strict_rag_chain
 from get_open_rag_chain import get_open_rag_chain
-
 
 # -------------------- ENV --------------------
 load_dotenv()
 
 st.set_page_config(
-    page_title="Preventive Healthcare AI Chatbot",
+    page_title="Preventive Healthcare AI",
     page_icon="🩺",
     layout="wide"
 )
 
-# -------------------- GLOBAL CSS --------------------
+# ==========================================================
+# MEDIUM DARK • PREMIUM • CONSISTENT THEME
+# ==========================================================
 st.markdown("""
 <style>
+:root {
+    --bg: #0b1220;
+    --card: #111827;
+    --surface: #0f172a;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+    --accent: #38bdf8;
+    --accent2: #818cf8;
+    --border: rgba(255,255,255,0.08);
+}
+
+/* App background */
 .stApp {
-    background-image:
-        linear-gradient(rgba(15,23,42,0.75), rgba(15,23,42,0.75)),
-        url("https://images.unsplash.com/photo-1580281657521-6dcb7caa2d39");
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
+    background: linear-gradient(180deg, #0b1220, #020617);
+    color: var(--text);
+}
+
+/* Header */
+.header {
+    text-align: center;
+    padding: 26px;
+    border-bottom: 1px solid var(--border);
+}
+.header h1 {
+    font-size: 2.3rem;
+    font-weight: 700;
+}
+.header span {
+    color: var(--accent);
 }
 
 .glass {
-    background: rgba(255,255,255,0.14);
-    backdrop-filter: blur(16px);
+    background: rgba(17, 24, 39, 0.85);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     border-radius: 18px;
-    padding: 24px;
-    margin-bottom: 22px;
+    padding: 26px;
+    margin-bottom: 28px;
     border: 1px solid rgba(255,255,255,0.25);
     color: #ffffff;
 }
 
-h1, h2, h3 {
-    color: #e5e7eb;
+.glass-title h1 {
+    margin-bottom: 5px;
 }
 
-.stButton button {
-    width: 100%;
-    background: linear-gradient(135deg, #0f172a, #020617);
-    color: #e0f2fe;
-    border-radius: 10px;
-    border: 1px solid #38bdf8;
-    
-}
-.stButton button:hover {
-    border-color: #67e8f9;
+/* Cards */
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 22px;
 }
 
+/* Mode pill */
+.mode-pill {
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: 10px;
+    display: inline-block;
+}
+.strict {
+    background: rgba(239,68,68,0.15);
+    color: #fca5a5;
+}
+.open {
+    background: rgba(34,197,94,0.15);
+    color: #86efac;
+}
+
+/* Chat bubbles */
 .stChatMessage {
-    background: rgba(255,255,255,0.07);
-    border-radius: 14px;
-    padding: 10px;
+    background: var(--surface) !important;
+    border: 1px solid var(--border);
+    border-radius: 16px;
 }
+
+/* Chat input (top + bottom consistency FIX) */
+textarea, input, .stChatInput textarea {
+    background: var(--surface) !important;
+    color: var(--text) !important;
+    border-radius: 14px !important;
+    border: 1px solid var(--border) !important;
+}
+
+/* Buttons */
+.stButton button {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #020617;
+    border-radius: 14px;
+    font-weight: 700;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background: #0b1220;
+    border-right: 1px solid var(--border);
+}
+
+
+/* ================= INPUT BOX WHITE STRIP FIX ================= */
+
+.stChatInputContainer {
+    background: #020617 !important;
+    border-top: 1px solid rgba(255,255,255,0.12);
+}
+
+
+/* FORCE CHAT TEXT VISIBILITY */
+.stChatMessage p,
+.stChatMessage span,
+.stChatMessage li,
+.stChatMessage div {
+    color: #e5e7eb !important;
+    font-weight: 500;
+}
+
+/* Assistant vs User subtle distinction */
+[data-testid="stChatMessage"][aria-label="assistant"] {
+    background: #0f172a !important;
+    border: 1px solid rgba(255,255,255,0.12);
+}
+
+[data-testid="stChatMessage"][aria-label="user"] {
+    background: #020617 !important;
+    border: 1px solid rgba(255,255,255,0.18);
+}
+
+/* ========== FIX 1: Chat Input Box ========== */
+textarea, 
+input, 
+.stTextInput input,
+.stTextArea textarea,
+div[data-testid="stChatInput"] textarea,
+div[data-testid="stChatInput"] input {
+    background: rgba(15, 23, 42, 0.95) !important;
+    color: #e5e7eb !important;
+    border-radius: 14px !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    padding: 12px !important;
+}
+
+/* Placeholder text in input */
+textarea::placeholder,
+input::placeholder {
+    color: #6b7280 !important;
+    opacity: 1 !important;
+}
+
+/* Focus state for input */
+textarea:focus, 
+input:focus,
+div[data-testid="stChatInput"] textarea:focus {
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2) !important;
+    outline: none !important;
+}
+
+/* ========== FIX 2: Toggle/Checkbox (Open Knowledge) ========== */
+div[data-testid="stCheckbox"] {
+    background: rgba(15, 23, 42, 0.6) !important;
+    padding: 12px !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+div[data-testid="stCheckbox"] label {
+    color: #ffffff !important;
+    font-weight: 500 !important;
+}
+
+div[data-testid="stCheckbox"] label span {
+    color: #ffffff !important;
+}
+
+/* ========== FIX 3: Sidebar Caption ========== */
+section[data-testid="stSidebar"] * {
+    color: #e5e7eb !important;
+}
+
+.stCaption {
+    color: #6b7280 !important;
+}
+
+section[data-testid="stSidebar"] .stCaption {
+    color: #6b7280 !important;
+    text-align: center;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
-# -------------------- HEADER --------------------
+# ==========================================================
+# HEADER
+# ==========================================================
 st.markdown("""
-<div class="glass" style="text-align:center;">
+<div class="glass glass-title" style="text-align:center;">
     <h1>🩺 Preventive Healthcare AI Chatbot</h1>
-    <p>CDAC-AI Students 2026 | RAG Based Medical Assistant</p>
+    <p class="subtitle">
+        CDAC-AI Students 2026 Project | Retrieval Augmented Generation (RAG)
+    </p>
 </div>
 """, unsafe_allow_html=True)
 
 # ==========================================================
-# LEFT SIDEBAR — SAMPLE QUESTIONS
+# SIDEBAR — QUICK PROMPTS (SHIFTED HERE ✔)
 # ==========================================================
 with st.sidebar:
+# st.sidebar.markdown("## ⚡ Quick Prompts")
     st.markdown("""
-    <div class="glass" style="text-align:center; padding: 12px; margin-bottom: 12px;">
-        <h3 style="margin: 0; font-size: 1.3rem;">💡 Sample Questions</h3>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    
-
-    questions = [
+        <div class="glass" style="text-align:center; padding: 12px; margin-bottom: 12px;">
+            <h3 style="margin: 0; font-size: 1.3rem;">💡 Sample Questions</h3>
+        </div>
+        """, unsafe_allow_html=True)
+    quick_prompts = [
         "What are the symptoms of Diabetes?",
         "How can Dengue be prevented?",
         "How to manage Asthma?",
@@ -100,73 +253,102 @@ with st.sidebar:
         "How to boost immunity naturally?"
     ]
 
-    for q in questions:
-        if st.button(q, use_container_width=True):
-            st.session_state["selected_prompt"] = q
+    for qp in quick_prompts:
+        if st.sidebar.button(qp, use_container_width=True):
+            st.session_state.setdefault("messages", [])
+            st.session_state["messages"].append({"role": "user", "content": qp})
+            st.rerun()
 
-    st.markdown("---")
-    st.caption("⚠️ Educational use only")
-
-# ==========================================================
-# CONFIG
-# ==========================================================
+    st.sidebar.markdown("---")
+    st.sidebar.caption("Click to instantly test the RAG system")
 
 # ==========================================================
-# CONFIG
+# USER GUIDE + MODE
+# ==========================================================
+left, right = st.columns([3,1])
+
+with left:
+    st.markdown("""
+    <div class="card">
+        <h3>📘 User Guide</h3>
+        <ul>
+            <li>Ask preventive healthcare questions via chat</li>
+            <li>Use sidebar prompts for instant demos</li>
+            <li><b>Strict Mode</b> → answers only from medical PDFs</li>
+            <li><b>Open Mode</b> → wider AI medical reasoning</li>
+            <li>Compare both modes for evaluation</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
+with right:
+    st.markdown("""<div class="card" style="text-align:center; padding: 11px; margin-bottom: 11px;">
+    <h3 style="margin: 0; font-size: 1.3rem;"> ⚙️ Mode Control</h3>
+    """, unsafe_allow_html=True)
+    # st.markdown("### ⚙️ Mode Control")
+
+    use_open = st.toggle("Open Knowledge", value=False)
+
+    mode_class = "open" if use_open else "strict"
+    mode_text = "OPEN MODE" if use_open else "STRICT MODE"
+
+    st.markdown(
+        f'<div class="mode-pill {mode_class}">{mode_text}</div>',
+        unsafe_allow_html=True
+    )
+
+    show_rag = st.button("🧠 View RAG Flow")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# ==========================================================
+# RAG FLOW (NO CHANGE — WOW PART 🔥)
+# ==========================================================
+if show_rag:
+    st.markdown("""
+    <div class="card">
+        <h3>🔁 RAG Intelligence Flow</h3>
+        <p style="color:#9ca3af;">
+        How the query is retrieved, grounded and answered.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    c1, c2 = st.columns(2)
+    with c1:
+        st.image("assets/strict_rag.png", caption="Strict RAG Flow", use_container_width=True)
+    with c2:
+        st.image("assets/open_rag.png", caption="Open RAG Flow", use_container_width=True)
+
+# ==========================================================
+# RAG CHAINS
 # ==========================================================
 current_dir = Path.cwd()
-vector_dir = current_dir / os.getenv("VECTOR_DIR", "chroma_db")  # Add default
-knn = int(os.getenv("KNN", "3"))  # Add default
-gpt_model_creativity = int(os.getenv("OPENAI_GPT_MODEL_CREATIVITY", "0"))  # Add default
+vector_dir = current_dir / os.getenv("VECTOR_DIR", "chroma_db")
 
-@st.cache_resource(show_spinner=False)
-def load_strict_rag():
-    """Load strict RAG chain - only answers from documents"""
-    try:
-        return get_strict_rag_chain(
-            knn,
-            st.secrets["OPENAI_EMBEDDING_MODEL"],
-            st.secrets["OPENAI_GPT_MODEL"],
-            vector_dir,
-            gpt_model_creativity
-        )
-    except Exception as e:
-        st.error(f"Error loading Strict RAG: {str(e)}")
-        return None
+@st.cache_resource
+def strict_chain():
+    return get_strict_rag_chain(
+        3,
+        st.secrets["OPENAI_EMBEDDING_MODEL"],
+        st.secrets["OPENAI_GPT_MODEL"],
+        vector_dir,
+        0
+    )
 
-@st.cache_resource(show_spinner=False)
-def load_open_rag():
-    """Load open RAG chain - uses broader knowledge"""
-    try:
-        return get_open_rag_chain(
-            knn,
-            st.secrets["OPENAI_EMBEDDING_MODEL"],
-            st.secrets["OPENAI_GPT_MODEL"],
-            vector_dir,
-            gpt_model_creativity
-        )
-    except Exception as e:
-        st.error(f"Error loading Open RAG: {str(e)}")
-        return None
+@st.cache_resource
+def open_chain():
+    return get_open_rag_chain(
+        3,
+        st.secrets["OPENAI_EMBEDDING_MODEL"],
+        st.secrets["OPENAI_GPT_MODEL"],
+        vector_dir,
+        0
+    )
 
 # ==========================================================
-# MAIN CHAT AREA
+# CHAT
 # ==========================================================
-st.markdown("""
-<div >
-    <h3 style="margin: 0; font-size: 1.3rem;">🧭 User Guide</h3>
-    <ul>
-        <li><strong>Ask Questions:</strong> Type any health-related query in the chat below</li>
-        <li><strong>Quick Access:</strong> Click sample questions from the sidebar for instant responses</li>
-        <li><strong>Strict RAG Mode:</strong> Get answers directly from verified medical documents</li>
-        <li><strong>Open Knowledge Mode:</strong> Access broader AI knowledge with general health information</li>
-        <li><strong>Explore More:</strong> Switch between modes using the toggle to compare responses</li>
-    </ul>
-</div>
-""", unsafe_allow_html=True)
-
-st.subheader("💬 Chat with Healthcare AI")
-user_choice = st.toggle("🌐 Use Open Knowledge", value=False)
+st.markdown("## 💬 Chat")
 
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
@@ -175,38 +357,21 @@ for msg in st.session_state["messages"]:
     with st.chat_message(msg["role"]):
         st.write(msg["content"])
 
-if "selected_prompt" in st.session_state:
-    prompt = st.session_state.pop("selected_prompt")
-else:
-    prompt = st.chat_input("Ask about diseases, symptoms, prevention...")
+prompt = st.chat_input("Ask about diseases, symptoms, prevention...")
 
 if prompt:
     st.session_state["messages"].append({"role": "user", "content": prompt})
+
     with st.chat_message("user"):
         st.write(prompt)
 
-    with st.spinner("Generating response..."):
-        response = (
-            load_open_rag().invoke({"input": prompt})
-            if user_choice else
-            load_strict_rag().invoke({"input": prompt})
-        )
+    with st.spinner("Thinking like a medical assistant..."):
+        result = open_chain().invoke({"input": prompt}) if use_open else strict_chain().invoke({"input": prompt})
 
-    answer = response.get("answer", "No response generated")
+    answer = result.get("answer", "No response generated.")
     st.session_state["messages"].append({"role": "assistant", "content": answer})
+
     with st.chat_message("assistant"):
         st.write(answer)
-     # 🔽 FORCE SCROLL TO BOTTOM AFTER NEW MESSAGE
-    st.rerun()
-# ==========================================================
-# RIGHT PANEL — SIDEBAR-LIKE (EXPANDER)
-# ==========================================================
-with st.expander("🔁 RAG Intelligence Flow"):
-    st.markdown("""
-    <div class="glass" style="text-align:center;">
-        <h3>How RAG Works</h3>
-    </div>
-    """, unsafe_allow_html=True)
 
-    st.image("assets/open_rag.png", use_container_width=True)
-    st.image("assets/strict_rag.png", use_container_width=True)
+    st.rerun()
