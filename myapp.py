@@ -237,7 +237,7 @@ with st.sidebar:
 # st.sidebar.markdown("## ⚡ Quick Prompts")
     st.markdown("""
         <div class="glass" style="text-align:center; padding: 12px; margin-bottom: 12px;">
-            <h3 style="margin: 0; font-size: 1.3rem;">💡 Sample Questions</h3>
+            <h3 style="margin: 0; font-size: 1.3rem;">⚡ Quick Prompts</h3>
         </div>
         """, unsafe_allow_html=True)
     quick_prompts = [
@@ -254,13 +254,11 @@ with st.sidebar:
     ]
 
     for qp in quick_prompts:
-        if st.sidebar.button(qp, use_container_width=True):
-            st.session_state.setdefault("messages", [])
-            st.session_state["messages"].append({"role": "user", "content": qp})
-            st.rerun()
-
-    st.sidebar.markdown("---")
-    st.sidebar.caption("Click to instantly test the RAG system")
+        if st.button(qp, use_container_width=True):
+            st.session_state["pending_prompt"] = qp
+            
+    st.markdown("---")
+    st.caption("Click to instantly test the RAG system")
 
 # ==========================================================
 # USER GUIDE + MODE
@@ -353,25 +351,38 @@ st.markdown("## 💬 Chat")
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
+# render chat history
 for msg in st.session_state["messages"]:
     with st.chat_message(msg["role"]):
         st.write(msg["content"])
 
-prompt = st.chat_input("Ask about diseases, symptoms, prevention...")
+# chat input ALWAYS visible
+user_input = st.chat_input("Ask about diseases, symptoms, prevention...")
 
+# unified prompt selector
+prompt = None
+if "pending_prompt" in st.session_state:
+    prompt = st.session_state.pop("pending_prompt")
+elif user_input:
+    prompt = user_input
+
+# response generation
 if prompt:
     st.session_state["messages"].append({"role": "user", "content": prompt})
-
     with st.chat_message("user"):
         st.write(prompt)
 
-    with st.spinner("Thinking like a medical assistant..."):
-        result = open_chain().invoke({"input": prompt}) if use_open else strict_chain().invoke({"input": prompt})
+    with st.spinner("Generating response..."):
+        response = (
+            open_chain().invoke({"input": prompt})
+            if use_open else
+            strict_chain().invoke({"input": prompt})
+        )
 
-    answer = result.get("answer", "No response generated.")
-    st.session_state["messages"].append({"role": "assistant", "content": answer})
+        answer = response.get("answer", "No response generated")
+        st.session_state["messages"].append(
+            {"role": "assistant", "content": answer}
+        )
 
-    with st.chat_message("assistant"):
-        st.write(answer)
-
-    st.rerun()
+        with st.chat_message("assistant"):
+            st.write(answer)
