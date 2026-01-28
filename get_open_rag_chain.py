@@ -5,11 +5,11 @@ from langchain_openai import  ChatOpenAI
 from langchain_chroma import Chroma
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_classic.chains import create_retrieval_chain
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 
 
-def get_open_rag_chain(knn, embed_model, gpt_model, vector_dir, creativity):
+def get_open_rag_chain(knn, embed_model, gpt_model, vector_dir, creativity, max_output):
     diseases=["Anaemia","Asthma","Covid-19","Dengue","Diabetes","GBS","HyperTension","Malaria","Nipah","Tuberculosis","Typhoid"]
     vectorstore=[]
     for disease in diseases:
@@ -28,12 +28,17 @@ def get_open_rag_chain(knn, embed_model, gpt_model, vector_dir, creativity):
                     temperature=creativity)
     system_prompt = (
         "You are an assistant. First answer the question using provided context. "
-        "If no context found. Use your own internal knowledge."
+        "If no context found. Use your own internal knowledge. Provide answer using the below rules"
+         f"1.Maximum output characters must not exceed {max_output}"
+        "2.Always include preface with brief introduction about disease"
+        "3.If answer contains bullet points then include include description of the bullet point."
+        "4.Always provide follow up question to the provided answer"
         "\n\n"
         "Context: {context}"
     )
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
+        MessagesPlaceholder(variable_name="chat_history"),
         ("human", "{input}"),
     ])
     # This creates the logic to process documents

@@ -5,10 +5,10 @@ from langchain_openai import  ChatOpenAI
 from langchain_chroma import Chroma
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_classic.chains import create_retrieval_chain
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 
-def get_strict_rag_chain(knn, embed_model, gpt_model, vector_dir, creativity):
+def get_strict_rag_chain(knn, embed_model, gpt_model, vector_dir, creativity,max_output):
     diseases=["Anaemia","Asthma","Covid-19","Dengue","Diabetes","GBS","HyperTension","Malaria","Nipah","Tuberculosis","Typhoid"]
     vectorstore=[]
     for disease in diseases:
@@ -30,7 +30,11 @@ def get_strict_rag_chain(knn, embed_model, gpt_model, vector_dir, creativity):
     "Use ONLY the provided context to answer the user's question. "
     "\n\n"
     "### RULES:\n"
-    "1. If the context contains the answer, provide it clearly and stop. DO NOT add any apologies.\n"
+    "1. If the context contains the answer, provide it clearly using below rules.\n"
+   f"1.Maximum output characters must not exceed {max_output}"
+    "2.Always include preface with brief introduction about disease"
+    "3.If answer contains bullet points then include include description of the bullet point."
+    "4.Always provide follow up question to the provided answer"
     "2. ONLY if the context does not contain the answer at all, say exactly: "
     "'I am Sorry. I can't find the answer for this. However, I can provide answer for the following diseases: "
     "Anaemia, Asthma, Covid-19, Dengue, Diabetes, GBS, HyperTension, Malaria, Nipah, Tuberculosis, and Typhoid.'\n"
@@ -40,6 +44,7 @@ def get_strict_rag_chain(knn, embed_model, gpt_model, vector_dir, creativity):
     )
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
+        MessagesPlaceholder(variable_name="chat_history"),
         ("human", "{input}"),
     ])
     # This creates the logic to process documents

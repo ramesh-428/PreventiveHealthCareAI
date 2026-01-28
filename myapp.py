@@ -10,217 +10,21 @@ from dotenv import load_dotenv
 from get_strict_rag_chain import get_strict_rag_chain
 from get_open_rag_chain import get_open_rag_chain
 
-# -------------------- ENV --------------------
-load_dotenv()
-
+#Page Config
 st.set_page_config(
     page_title="Preventive Healthcare AI",
     page_icon="🩺",
     layout="wide"
 )
+#Load CSS styles
+def local_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-# ==========================================================
-# MEDIUM DARK • PREMIUM • CONSISTENT THEME
-# ==========================================================
-st.markdown("""
-<style>
-:root {
-    --bg: #0b1220;
-    --card: #111827;
-    --surface: #0f172a;
-    --text: #e5e7eb;
-    --muted: #9ca3af;
-    --accent: #38bdf8;
-    --accent2: #818cf8;
-    --border: rgba(255,255,255,0.08);
-}
+# Inject the CSS file
+local_css("styles.css")
 
-/* App background */
-.stApp {
-    background: linear-gradient(180deg, #0b1220, #020617);
-    color: var(--text);
-}
-
-/* Header */
-.header {
-    text-align: center;
-    padding: 26px;
-    border-bottom: 1px solid var(--border);
-}
-.header h1 {
-    font-size: 2.3rem;
-    font-weight: 700;
-}
-.header span {
-    color: var(--accent);
-}
-
-.glass {
-    background: rgba(17, 24, 39, 0.85);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border-radius: 18px;
-    padding: 26px;
-    margin-bottom: 28px;
-    border: 1px solid rgba(255,255,255,0.25);
-    color: #ffffff;
-}
-
-.glass-title h1 {
-    margin-bottom: 5px;
-}
-
-/* Cards */
-.card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 22px;
-}
-
-/* Mode pill */
-.mode-pill {
-    padding: 8px 18px;
-    border-radius: 999px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    margin-top: 10px;
-    display: inline-block;
-}
-.strict {
-    background: rgba(239,68,68,0.15);
-    color: #fca5a5;
-}
-.open {
-    background: rgba(34,197,94,0.15);
-    color: #86efac;
-}
-
-/* Chat bubbles */
-.stChatMessage {
-    background: var(--surface) !important;
-    border: 1px solid var(--border);
-    border-radius: 16px;
-}
-
-/* Chat input (top + bottom consistency FIX) */
-textarea, input, .stChatInput textarea {
-    background: var(--surface) !important;
-    color: var(--text) !important;
-    border-radius: 14px !important;
-    border: 1px solid var(--border) !important;
-}
-
-/* Buttons */
-.stButton button {
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    color: #020617;
-    border-radius: 14px;
-    font-weight: 700;
-}
-
-/* Sidebar */
-section[data-testid="stSidebar"] {
-    background: #0b1220;
-    border-right: 1px solid var(--border);
-}
-
-
-/* ================= INPUT BOX WHITE STRIP FIX ================= */
-
-.stChatInputContainer {
-    background: #020617 !important;
-    border-top: 1px solid rgba(255,255,255,0.12);
-}
-
-
-/* FORCE CHAT TEXT VISIBILITY */
-.stChatMessage p,
-.stChatMessage span,
-.stChatMessage li,
-.stChatMessage div {
-    color: #e5e7eb !important;
-    font-weight: 500;
-}
-
-/* Assistant vs User subtle distinction */
-[data-testid="stChatMessage"][aria-label="assistant"] {
-    background: #0f172a !important;
-    border: 1px solid rgba(255,255,255,0.12);
-}
-
-[data-testid="stChatMessage"][aria-label="user"] {
-    background: #020617 !important;
-    border: 1px solid rgba(255,255,255,0.18);
-}
-
-/* ========== FIX 1: Chat Input Box ========== */
-textarea, 
-input, 
-.stTextInput input,
-.stTextArea textarea,
-div[data-testid="stChatInput"] textarea,
-div[data-testid="stChatInput"] input {
-    background: rgba(15, 23, 42, 0.95) !important;
-    color: #e5e7eb !important;
-    border-radius: 14px !important;
-    border: 1px solid rgba(255,255,255,0.15) !important;
-    padding: 12px !important;
-}
-
-/* Placeholder text in input */
-textarea::placeholder,
-input::placeholder {
-    color: #6b7280 !important;
-    opacity: 1 !important;
-}
-
-/* Focus state for input */
-textarea:focus, 
-input:focus,
-div[data-testid="stChatInput"] textarea:focus {
-    border-color: #38bdf8 !important;
-    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2) !important;
-    outline: none !important;
-}
-
-/* ========== FIX 2: Toggle/Checkbox (Open Knowledge) ========== */
-div[data-testid="stCheckbox"] {
-    background: rgba(15, 23, 42, 0.6) !important;
-    padding: 12px !important;
-    border-radius: 10px !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-}
-
-div[data-testid="stCheckbox"] label {
-    color: #ffffff !important;
-    font-weight: 500 !important;
-}
-
-div[data-testid="stCheckbox"] label span {
-    color: #ffffff !important;
-}
-
-/* ========== FIX 3: Sidebar Caption ========== */
-section[data-testid="stSidebar"] * {
-    color: #e5e7eb !important;
-}
-
-.stCaption {
-    color: #6b7280 !important;
-}
-
-section[data-testid="stSidebar"] .stCaption {
-    color: #6b7280 !important;
-    text-align: center;
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-# ==========================================================
-# HEADER
-# ==========================================================
+#Page Title
 st.markdown("""
 <div class="glass glass-title" style="text-align:center;">
     <h1>🩺 Preventive Healthcare AI Chatbot</h1>
@@ -230,11 +34,8 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ==========================================================
-# SIDEBAR — QUICK PROMPTS (SHIFTED HERE ✔)
-# ==========================================================
+# Left Side Bar Quick Prompts
 with st.sidebar:
-# st.sidebar.markdown("## ⚡ Quick Prompts")
     st.markdown("""
         <div class="glass" style="text-align:center; padding: 12px; margin-bottom: 12px;">
             <h3 style="margin: 0; font-size: 1.3rem;">⚡ Quick Prompts</h3>
@@ -260,9 +61,7 @@ with st.sidebar:
     st.markdown("---")
     st.caption("Click to instantly test the RAG system")
 
-# ==========================================================
-# USER GUIDE + MODE
-# ==========================================================
+# User Guide (Center)
 left, right = st.columns([3,1])
 
 with left:
@@ -323,30 +122,32 @@ if show_rag:
 current_dir = Path.cwd()
 vector_dir = current_dir / os.getenv("VECTOR_DIR", "chroma_db")
 
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def strict_chain():
     return get_strict_rag_chain(
-        3,
+        st.secrets["KNN"],
         st.secrets["OPENAI_EMBEDDING_MODEL"],
         st.secrets["OPENAI_GPT_MODEL"],
         vector_dir,
-        0
+        st.secrets["OPENAI_GPT_MODEL_CREATIVITY"],
+        st.secrets["MAX_OUTPUT_CHARS"]
     )
 
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def open_chain():
     return get_open_rag_chain(
-        3,
+        st.secrets["KNN"],
         st.secrets["OPENAI_EMBEDDING_MODEL"],
         st.secrets["OPENAI_GPT_MODEL"],
         vector_dir,
-        0
+        st.secrets["OPENAI_GPT_MODEL_CREATIVITY"],
+        st.secrets["MAX_OUTPUT_CHARS"]
     )
 
 # ==========================================================
 # CHAT
 # ==========================================================
-st.markdown("## 💬 Chat")
+st.markdown("## Chat")
 
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
@@ -366,6 +167,9 @@ if "pending_prompt" in st.session_state:
 elif user_input:
     prompt = user_input
 
+#Get prior chat message and response
+prior_chat=st.session_state["messages"][-2:]
+
 # response generation
 if prompt:
     st.session_state["messages"].append({"role": "user", "content": prompt})
@@ -374,9 +178,9 @@ if prompt:
 
     with st.spinner("Generating response..."):
         response = (
-            open_chain().invoke({"input": prompt})
+            open_chain().invoke({"input": prompt, "chat_history":prior_chat})
             if use_open else
-            strict_chain().invoke({"input": prompt})
+            strict_chain().invoke({"input": prompt,"chat_history":prior_chat})
         )
 
         answer = response.get("answer", "No response generated")
