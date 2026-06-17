@@ -6,3 +6,4 @@ langchain-text-splitters
 langchain-chroma
 langchain-classic
 langchain-core
+protobuf==4.25.3
